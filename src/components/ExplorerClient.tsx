@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import TimeSeriesChart, { type TimePoint } from '@/components/TimeSeriesChart';
 import type { MetricDef } from '@/lib/queries';
-import { ACCENT } from '@/lib/theme';
+import { ACCENT } from '@/lib/colors';
 
 const COLORS: Record<string, string> = {
   heart_rate: ACCENT.rhr,

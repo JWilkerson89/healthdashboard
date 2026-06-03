@@ -7,6 +7,13 @@ export interface TrendPoint {
   value: number | null;
 }
 
+/** Compact y-axis tick labels: 10000 → "10k", keeps small values as-is. */
+function compact(v: number): string {
+  if (v == null) return '';
+  if (Math.abs(v) >= 1000) return `${Math.round(v / 100) / 10}k`;
+  return String(v);
+}
+
 /** A titled card wrapping a single-series line chart over dated points. */
 export default function TrendCard({
   title,
@@ -53,6 +60,7 @@ export default function TrendCard({
           <LineChart
             height={height}
             xAxis={[{ scaleType: 'point', data: x }]}
+            yAxis={[{ valueFormatter: (v: number) => compact(v) }]}
             series={[
               {
                 data: y,
@@ -63,7 +71,7 @@ export default function TrendCard({
                 valueFormatter: (v) => (v == null ? '—' : String(v)),
               },
             ]}
-            margin={{ left: 40, right: 12, top: 10, bottom: 24 }}
+            margin={{ left: 48, right: 12, top: 10, bottom: 24 }}
             grid={{ horizontal: true }}
             sx={{
               '& .MuiAreaElement-root': { fillOpacity: 0.12 },

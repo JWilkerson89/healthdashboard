@@ -16,7 +16,7 @@ import {
 import StatTile from '@/components/StatTile';
 import SleepStages from '@/components/SleepStages';
 import TimeSeriesChart from '@/components/TimeSeriesChart';
-import { ACCENT } from '@/lib/theme';
+import { ACCENT } from '@/lib/colors';
 import { fmtMinutes, fmtNum, fmtDateLong, toLocal, fmtTime } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';

@@ -8,7 +8,7 @@ import {
 } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
 import TrendCard from '@/components/TrendCard';
-import { ACCENT } from '@/lib/theme';
+import { ACCENT } from '@/lib/colors';
 import {
   fmtNum,
   fmtMinutes,

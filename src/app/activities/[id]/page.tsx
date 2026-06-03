@@ -23,7 +23,7 @@ import StatTile from '@/components/StatTile';
 import ZoneBar from '@/components/ZoneBar';
 import ActivityMap from '@/components/ActivityMap';
 import TimeSeriesChart from '@/components/TimeSeriesChart';
-import { ACCENT } from '@/lib/theme';
+import { ACCENT } from '@/lib/colors';
 import {
   humanize,
   metersToMiles,
