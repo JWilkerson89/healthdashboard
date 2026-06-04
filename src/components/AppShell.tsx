@@ -29,6 +29,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import MenuIcon from '@mui/icons-material/Menu';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 const NAV = [
   { href: '/', label: 'Dashboard', icon: <DashboardIcon /> },
@@ -80,9 +81,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const brand = (
     <Toolbar sx={{ gap: 1 }}>
       <FavoriteIcon color="error" />
-      <Typography variant="h6" noWrap>
+      <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
         Health
       </Typography>
+      <ThemeSwitcher />
     </Toolbar>
   );
 

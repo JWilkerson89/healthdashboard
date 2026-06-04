@@ -48,7 +48,7 @@ export default function NutritionPage() {
 
       {days.length >= 3 && (
         <Box sx={{ maxWidth: 480 }}>
-          <TrendCard title="Calories / day" unit="cal" data={caloriesTrend} color={ACCENT.calories} area={false} />
+          <TrendCard title="Calories / day" unit="cal" data={caloriesTrend} colorKey="calories" area={false} />
         </Box>
       )}
 

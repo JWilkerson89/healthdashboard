@@ -54,10 +54,10 @@ export default function BodyPage() {
           gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
         }}
       >
-        <TrendCard title="Weight" unit="lb" data={pt('weight')} color={ACCENT.sleep} area={false} />
-        <TrendCard title="Body Fat %" unit="%" data={pt('bf_pct')} color={ACCENT.stress} area={false} />
-        <TrendCard title="Skeletal Muscle Mass" unit="lb" data={pt('smm')} color={ACCENT.steps} area={false} />
-        <TrendCard title="Lean Mass" unit="lb" data={pt('lean_mass')} color={ACCENT.spo2} area={false} />
+        <TrendCard title="Weight" unit="lb" data={pt('weight')} colorKey="sleep" area={false} />
+        <TrendCard title="Body Fat %" unit="%" data={pt('bf_pct')} colorKey="stress" area={false} />
+        <TrendCard title="Skeletal Muscle Mass" unit="lb" data={pt('smm')} colorKey="steps" area={false} />
+        <TrendCard title="Lean Mass" unit="lb" data={pt('lean_mass')} colorKey="spo2" area={false} />
       </Box>
     </Box>
   );

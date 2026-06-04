@@ -141,8 +141,8 @@ export default function TrainingPage() {
               title="Acute vs Chronic Load"
               dates={loadTrend.map((d) => d.date)}
               series={[
-                { label: 'Acute (7d)', color: ACCENT.rhr, data: loadTrend.map((d) => d.acute) },
-                { label: 'Chronic (28d)', color: ACCENT.sleep, data: loadTrend.map((d) => d.chronic) },
+                { label: 'Acute (7d)', colorKey: 'rhr', data: loadTrend.map((d) => d.acute) },
+                { label: 'Chronic (28d)', colorKey: 'sleep', data: loadTrend.map((d) => d.chronic) },
               ]}
             />
           )}
@@ -158,7 +158,7 @@ export default function TrainingPage() {
         }}
       >
         {vo2.length > 1 && (
-          <TrendCard title="VO₂ Max" data={vo2} color={ACCENT.steps} area={false} />
+          <TrendCard title="VO₂ Max" data={vo2} colorKey="steps" area={false} />
         )}
         {race && (
           <Card>

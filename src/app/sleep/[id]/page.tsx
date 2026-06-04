@@ -104,7 +104,7 @@ export default async function SleepDetail({
             <Typography variant="h6" sx={{ mb: 1 }}>
               Overnight HRV
             </Typography>
-            <TimeSeriesChart points={hrv} color={ACCENT.hrv} unit="ms" offsetHours={off} area />
+            <TimeSeriesChart points={hrv} colorKey="hrv" unit="ms" offsetHours={off} area />
           </CardContent>
         </Card>
       )}
@@ -115,7 +115,7 @@ export default async function SleepDetail({
             <Typography variant="h6" sx={{ mb: 1 }}>
               Overnight SpO₂
             </Typography>
-            <TimeSeriesChart points={spo2} color={ACCENT.spo2} unit="%" offsetHours={off} area />
+            <TimeSeriesChart points={spo2} colorKey="spo2" unit="%" offsetHours={off} area />
           </CardContent>
         </Card>
       )}
@@ -130,7 +130,7 @@ export default async function SleepDetail({
               </Typography>
             </Box>
             {movement.length > 1 && (
-              <TimeSeriesChart points={movement} color={ACCENT.stress} unit="" offsetHours={off} area />
+              <TimeSeriesChart points={movement} colorKey="stress" unit="" offsetHours={off} area />
             )}
           </CardContent>
         </Card>

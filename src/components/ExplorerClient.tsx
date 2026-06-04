@@ -11,17 +11,17 @@ import {
 } from '@mui/material';
 import TimeSeriesChart, { type TimePoint } from '@/components/TimeSeriesChart';
 import type { MetricDef } from '@/lib/queries';
-import { ACCENT } from '@/lib/colors';
+import type { AccentKey } from '@/lib/themes';
 
-const COLORS: Record<string, string> = {
-  heart_rate: ACCENT.rhr,
-  stress: ACCENT.stress,
-  body_battery: ACCENT.battery,
-  respiration: ACCENT.spo2,
-  steps: ACCENT.steps,
-  intensity_minutes: ACCENT.load,
-  spo2: ACCENT.spo2,
-  hrv: ACCENT.hrv,
+const COLOR_KEYS: Record<string, AccentKey> = {
+  heart_rate: 'rhr',
+  stress: 'stress',
+  body_battery: 'battery',
+  respiration: 'spo2',
+  steps: 'steps',
+  intensity_minutes: 'load',
+  spo2: 'spo2',
+  hrv: 'hrv',
 };
 
 export default function ExplorerClient({
@@ -60,7 +60,7 @@ export default function ExplorerClient({
     load(metric);
   }, [metric, load]);
 
-  const color = COLORS[metric] ?? ACCENT.hrv;
+  const colorKey = COLOR_KEYS[metric] ?? 'hrv';
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -111,7 +111,7 @@ export default function ExplorerClient({
           ) : (
             <TimeSeriesChart
               points={points}
-              color={color}
+              colorKey={colorKey}
               unit={def?.unit}
               offsetHours={offsetHours}
               height={320}

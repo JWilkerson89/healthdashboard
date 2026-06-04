@@ -163,7 +163,7 @@ export default async function ActivityDetail({
             </Typography>
             <TimeSeriesChart
               points={hr}
-              color={ACCENT.rhr}
+              colorKey="rhr"
               unit="bpm"
               offsetHours={activity.timezone_offset_hours}
             />

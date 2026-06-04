@@ -114,12 +114,12 @@ export default function Dashboard() {
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
           }}
         >
-          <TrendCard title="HRV" unit="ms" data={trend('hrv')} color={ACCENT.hrv} />
-          <TrendCard title="Sleep Score" data={trend('sleep_score')} color={ACCENT.sleep} />
-          <TrendCard title="Resting HR" unit="bpm" data={trend('resting_hr')} color={ACCENT.rhr} />
-          <TrendCard title="Steps" data={trend('total_steps')} color={ACCENT.steps} />
-          <TrendCard title="Body Battery (avg)" data={trend('body_battery_avg')} color={ACCENT.battery} />
-          <TrendCard title="Stress (avg)" data={trend('stress_avg')} color={ACCENT.stress} />
+          <TrendCard title="HRV" unit="ms" data={trend('hrv')} colorKey="hrv" />
+          <TrendCard title="Sleep Score" data={trend('sleep_score')} colorKey="sleep" />
+          <TrendCard title="Resting HR" unit="bpm" data={trend('resting_hr')} colorKey="rhr" />
+          <TrendCard title="Steps" data={trend('total_steps')} colorKey="steps" />
+          <TrendCard title="Body Battery (avg)" data={trend('body_battery_avg')} colorKey="battery" />
+          <TrendCard title="Stress (avg)" data={trend('stress_avg')} colorKey="stress" />
         </Box>
       </Box>
 

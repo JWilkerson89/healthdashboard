@@ -1,10 +1,11 @@
 'use client';
-import { Card, CardContent, Typography, Box, Stack } from '@mui/material';
+import { Card, CardContent, Typography, Box, Stack, useTheme } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
+import type { AccentKey } from '@/lib/themes';
 
 export interface DualSeries {
   label: string;
-  color: string;
+  colorKey: AccentKey;
   data: (number | null)[];
 }
 
@@ -20,6 +21,11 @@ export default function DualLineCard({
   series: DualSeries[];
   height?: number;
 }) {
+  const theme = useTheme();
+  const resolved = series.map((s) => ({
+    ...s,
+    color: theme.accents[s.colorKey] ?? theme.palette.primary.main,
+  }));
   const x = dates.map((d) => {
     const [, m, day] = d.split('-');
     return `${m}/${day}`;
@@ -33,7 +39,7 @@ export default function DualLineCard({
             {title}
           </Typography>
           <Stack direction="row" spacing={1.5}>
-            {series.map((s) => (
+            {resolved.map((s) => (
               <Box key={s.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: s.color }} />
                 <Typography variant="caption" color="text.secondary">
@@ -46,7 +52,7 @@ export default function DualLineCard({
         <LineChart
           height={height}
           xAxis={[{ scaleType: 'point', data: x }]}
-          series={series.map((s) => ({
+          series={resolved.map((s) => ({
             data: s.data,
             label: s.label,
             color: s.color,

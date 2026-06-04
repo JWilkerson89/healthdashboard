@@ -1,6 +1,7 @@
 'use client';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
+import type { AccentKey } from '@/lib/themes';
 
 export interface TimePoint {
   t: string; // UTC "YYYY-MM-DD HH:MM:SS"
@@ -13,19 +14,21 @@ export interface TimePoint {
  */
 export default function TimeSeriesChart({
   points,
-  color,
+  colorKey,
   unit,
   offsetHours = 0,
   height = 260,
   area = false,
 }: {
   points: TimePoint[];
-  color: string;
+  colorKey: AccentKey;
   unit?: string;
   offsetHours?: number;
   height?: number;
   area?: boolean;
 }) {
+  const theme = useTheme();
+  const color = theme.accents[colorKey] ?? theme.palette.primary.main;
   if (!points.length) {
     return (
       <Box sx={{ height, display: 'grid', placeItems: 'center' }}>

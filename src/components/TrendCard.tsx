@@ -1,6 +1,7 @@
 'use client';
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
+import type { AccentKey } from '@/lib/themes';
 
 export interface TrendPoint {
   date: string; // YYYY-MM-DD
@@ -18,18 +19,20 @@ function compact(v: number): string {
 export default function TrendCard({
   title,
   data,
-  color,
+  colorKey,
   unit,
   height = 180,
   area = true,
 }: {
   title: string;
   data: TrendPoint[];
-  color: string;
+  colorKey: AccentKey;
   unit?: string;
   height?: number;
   area?: boolean;
 }) {
+  const theme = useTheme();
+  const color = theme.accents[colorKey] ?? theme.palette.primary.main;
   const x = data.map((d) => {
     const [, m, day] = d.date.split('-');
     return `${m}/${day}`;
