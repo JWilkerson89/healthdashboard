@@ -660,85 +660,107 @@ export function listSupplements(): Supplement[] {
 
 // ---------- Reverse-linked notes (note ⇄ asset) ----------
 //
-// health_notes.linked_records is a JSON array of {type, id} objects, e.g.
-// [{"type":"activity","id":23104921094},{"type":"blood_panel","id":5}].
-// These helpers index it backwards: given an asset, find the notes about it.
+// health_notes.linked_records is a JSON array of string references in the form
+// "<table>.<column>='<value>'" (mostly date-keyed), e.g.
+//   ["activity_summary.date='2026-06-02'", "blood_panels.date='2026-06-19'"].
+// We parse in JS (not SQL json_each) so a single malformed row can never break
+// the page, and index backwards: given an asset, find the notes about it.
+// The legacy {type, id} object form is also accepted.
 
 export interface NoteSummary {
   count: number;
-  category: string; // representative category (high-priority/most-recent wins)
+  category: string; // representative category (high-priority wins)
   highPriority: boolean;
 }
 
-/** Notes linking one specific record. */
-export function notesForRecord(type: string, id: number): HealthNote[] {
-  return db()
-    .prepare(
-      `SELECT hn.id, hn.entry_date, hn.category, hn.source, hn.content,
-              hn.action_items, hn.linked_records, hn.priority
-         FROM health_notes hn
-        WHERE hn.linked_records IS NOT NULL
-          AND json_valid(hn.linked_records)
-          AND EXISTS (
-            SELECT 1 FROM json_each(hn.linked_records) je
-             WHERE json_extract(je.value, '$.type') = ?
-               AND json_extract(je.value, '$.id') = ?
-          )
-        ORDER BY hn.entry_date DESC, hn.id DESC`,
-    )
-    .all(type, id) as HealthNote[];
+export type AssetKind = 'activity' | 'sleep' | 'blood_panel' | 'meal' | 'day';
+
+// Which ref tables resolve to each asset kind (a note may reference either).
+const ASSET_KEYS: Record<AssetKind, string[]> = {
+  activity: ['activity_summary', 'activity'],
+  sleep: ['daily_health_summary', 'sleep'],
+  blood_panel: ['blood_panels', 'blood_panel'],
+  meal: ['meals'],
+  day: ['daily_health_summary'],
+};
+
+interface ParsedRef {
+  table: string;
+  value: string;
 }
 
-/** Notes linking any of the given records (deduped). */
-export function notesForRecords(type: string, ids: number[]): HealthNote[] {
-  if (ids.length === 0) return [];
-  const placeholders = ids.map(() => '?').join(',');
-  return db()
-    .prepare(
-      `SELECT DISTINCT hn.id, hn.entry_date, hn.category, hn.source, hn.content,
-              hn.action_items, hn.linked_records, hn.priority
-         FROM health_notes hn, json_each(hn.linked_records) je
-        WHERE json_valid(hn.linked_records)
-          AND json_extract(je.value, '$.type') = ?
-          AND json_extract(je.value, '$.id') IN (${placeholders})
-        ORDER BY hn.entry_date DESC, hn.id DESC`,
-    )
-    .all(type, ...ids) as HealthNote[];
+function parseRefs(linked: string | null): ParsedRef[] {
+  if (!linked) return [];
+  let arr: unknown;
+  try {
+    arr = JSON.parse(linked);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(arr)) return [];
+  const refs: ParsedRef[] = [];
+  for (const item of arr) {
+    if (typeof item === 'string') {
+      // "table.column='value'" → {table, value}
+      const m = item.match(/^\s*([A-Za-z_]\w*)\s*\.\s*\w+\s*=\s*'?([^']*?)'?\s*$/);
+      if (m) refs.push({ table: m[1], value: m[2] });
+    } else if (item && typeof item === 'object') {
+      const o = item as Record<string, unknown>;
+      if (o.type != null && o.id != null) refs.push({ table: String(o.type), value: String(o.id) });
+    }
+  }
+  return refs;
 }
 
-/** Map of record id → note summary, for indicator dots across a whole list. */
-export function noteSummaryByRecord(type: string): Map<number, NoteSummary> {
-  const rows = db()
-    .prepare(
-      `SELECT json_extract(je.value, '$.id') AS rid, hn.category, hn.priority,
-              hn.entry_date
-         FROM health_notes hn, json_each(hn.linked_records) je
-        WHERE json_valid(hn.linked_records)
-          AND json_extract(je.value, '$.type') = ?
-        ORDER BY hn.entry_date DESC`,
-    )
-    .all(type) as { rid: number; category: string; priority: string | null; entry_date: string }[];
+/**
+ * In-memory reverse index over all notes' linked_records. Cheap to build (notes
+ * are few); construct once per request and reuse for list pages.
+ */
+export class NoteIndex {
+  private byKey = new Map<string, HealthNote[]>();
 
-  const map = new Map<number, NoteSummary>();
-  for (const r of rows) {
-    if (r.rid == null) continue;
-    const existing = map.get(r.rid);
-    if (!existing) {
-      map.set(r.rid, {
-        count: 1,
-        category: r.category,
-        highPriority: r.priority === 'high',
-      });
-    } else {
-      existing.count += 1;
-      // Promote category to a high-priority note's category if one exists.
-      if (r.priority === 'high' && !existing.highPriority) {
-        existing.category = r.category;
-        existing.highPriority = true;
+  constructor(notes: HealthNote[]) {
+    for (const n of notes) {
+      for (const r of parseRefs(n.linked_records)) {
+        const key = `${r.table}:${r.value}`;
+        const list = this.byKey.get(key) ?? [];
+        if (!list.some((x) => x.id === n.id)) list.push(n);
+        this.byKey.set(key, list);
       }
     }
   }
-  return map;
+
+  /** Notes linking an asset of `kind` identified by `value` (usually a date). */
+  notesFor(kind: AssetKind, value: string | null | undefined): HealthNote[] {
+    if (!value) return [];
+    const seen = new Set<number>();
+    const out: HealthNote[] = [];
+    for (const table of ASSET_KEYS[kind]) {
+      for (const n of this.byKey.get(`${table}:${value}`) ?? []) {
+        if (!seen.has(n.id)) {
+          seen.add(n.id);
+          out.push(n);
+        }
+      }
+    }
+    out.sort((a, b) => (a.entry_date < b.entry_date ? 1 : -1));
+    return out;
+  }
+
+  summaryFor(kind: AssetKind, value: string | null | undefined): NoteSummary | undefined {
+    const notes = this.notesFor(kind, value);
+    if (!notes.length) return undefined;
+    const lead = notes.find((n) => n.priority === 'high') ?? notes[0];
+    return {
+      count: notes.length,
+      category: lead.category,
+      highPriority: notes.some((n) => n.priority === 'high'),
+    };
+  }
+}
+
+export function noteIndex(): NoteIndex {
+  return new NoteIndex(listHealthNotes());
 }
 
 // ---------- Profile / header stats ----------

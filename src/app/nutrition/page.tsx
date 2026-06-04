@@ -1,8 +1,10 @@
 import { Box, Typography, Card, CardContent, Chip } from '@mui/material';
-import { listMeals, dailyNutrition } from '@/lib/queries';
+import { listMeals, dailyNutrition, noteIndex } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
 import MacroBar from '@/components/MacroBar';
 import TrendCard from '@/components/TrendCard';
+import NoteDot from '@/components/NoteDot';
+import LinkedNotes from '@/components/LinkedNotes';
 import { ACCENT, MACRO } from '@/lib/colors';
 import { fmtNum, fmtDateLong, humanize } from '@/lib/format';
 
@@ -12,6 +14,7 @@ export default function NutritionPage() {
   const days = dailyNutrition(); // most recent first
   const meals = listMeals();
   const latest = days[0];
+  const notes = noteIndex();
 
   const caloriesTrend = [...days]
     .reverse()
@@ -60,7 +63,14 @@ export default function NutritionPage() {
                   {fmtNum(d.calories)} cal
                 </Typography>
                 <Chip size="small" variant="outlined" label={`${d.meals} meal${d.meals > 1 ? 's' : ''}`} />
+                <NoteDot summary={notes.summaryFor('meal', d.date)} />
               </Box>
+
+              {notes.notesFor('meal', d.date).length > 0 && (
+                <Box sx={{ mb: 1.5 }}>
+                  <LinkedNotes notes={notes.notesFor('meal', d.date)} />
+                </Box>
+              )}
 
               <MacroBar protein={d.protein} fat={d.fat} carbs={d.carbs} />
 

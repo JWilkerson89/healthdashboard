@@ -6,7 +6,7 @@ import {
   listActivities,
   getProfile,
   latestReadiness,
-  noteSummaryByRecord,
+  noteIndex,
 } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
 import NoteDot from '@/components/NoteDot';
@@ -36,7 +36,7 @@ export default function Dashboard() {
   const latest = getLatestSummary();
   const profile = getProfile();
   const recent = listActivities().slice(0, 8);
-  const noteMap = noteSummaryByRecord('activity');
+  const notes = noteIndex();
   const readiness = latestReadiness();
   const readinessColor =
     { HIGH: ACCENT.steps, MODERATE: ACCENT.sleep, LOW: ACCENT.battery, POOR: ACCENT.rhr }[
@@ -125,7 +125,7 @@ export default function Dashboard() {
                       <Typography variant="body1">
                         {a.activity_name || humanize(a.activity_type_key)}
                       </Typography>
-                      <NoteDot summary={noteMap.get(a.activity_id)} />
+                      <NoteDot summary={notes.summaryFor('activity', local.toISOString().slice(0, 10))} />
                     </Box>
                     <Typography variant="caption" color="text.secondary">
                       {fmtDateLong(local.toISOString().slice(0, 10))} · {fmtTime(local)}

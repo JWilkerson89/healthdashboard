@@ -24,18 +24,28 @@ writes; this app only ever reads.
 
 ## Linked records (note ⇄ asset)
 
-`health_notes.linked_records` is a JSON array of typed references:
+`health_notes.linked_records` is a JSON array of string references in the form
+`"<table>.<column>='<value>'"` (mostly date-keyed):
 
 ```json
-[{"type": "activity", "id": 23104921094}, {"type": "blood_panel", "id": 5}]
+["activity_summary.date='2026-06-02'", "blood_panels.date='2026-06-19'",
+ "meals.date='2026-06-03'", "daily_health_summary.date='2026-06-02'"]
 ```
 
-Supported `type` values: `activity` (activity_id), `sleep` (sleep_id),
-`blood_panel` (blood_panels.id). When a note links a record, that asset's
-detail page shows a category-colored "linked notes" chip that expands the note
-inline, and its list rows / the dashboard show a small note dot. Empty arrays
-render nothing. Jarvis (or any writer) should emit exactly this shape so the
-reverse index in `queries.ts` (`notesForRecord`, `noteSummaryByRecord`) lights up.
+When a note references an asset, that asset surfaces a category-colored "linked
+notes" chip that expands the note inline, plus a note dot on list rows and the
+dashboard. Reference tables map to assets like so (`queries.ts` → `NoteIndex`):
+
+| ref table | shows on |
+|---|---|
+| `activity_summary` / `activity` (by date) | activity detail, activities list, dashboard |
+| `daily_health_summary` / `sleep` (by date) | sleep detail, sleep list |
+| `blood_panels` (by date) | lab panel |
+| `meals` (by date) | nutrition day |
+
+Parsing is done in JS (not SQL `json_each`) so a single malformed row can't
+break a page. The legacy `[{"type","id"}]` object form is also accepted. Empty
+arrays render nothing.
 
 ## Running
 

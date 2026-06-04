@@ -19,7 +19,7 @@ import {
   getStrengthSets,
   getActivitySeries,
   getActivityLaps,
-  notesForRecord,
+  noteIndex,
 } from '@/lib/queries';
 import LinkedNotes from '@/components/LinkedNotes';
 import StatTile from '@/components/StatTile';
@@ -60,7 +60,10 @@ export default async function ActivityDetail({
   const sets = getStrengthSets(activity.activity_id);
   const hr = getActivitySeries(activity.activity_id, 'heart_rate');
   const laps = getActivityLaps(activity.activity_id);
-  const notes = notesForRecord('activity', activity.activity_id);
+  const activityDate = toLocal(activity.start_ts, activity.timezone_offset_hours)
+    .toISOString()
+    .slice(0, 10);
+  const notes = noteIndex().notesFor('activity', activityDate);
   // Show laps only when there's more than one and they carry useful signal.
   const showLaps =
     laps.length > 1 &&

@@ -14,7 +14,7 @@ import {
   getSleepSeries,
   getSleepMovement,
   getSleepEventCounts,
-  notesForRecord,
+  noteIndex,
 } from '@/lib/queries';
 import LinkedNotes from '@/components/LinkedNotes';
 import StatTile from '@/components/StatTile';
@@ -39,7 +39,7 @@ export default async function SleepDetail({
   const spo2 = getSleepSeries(s.sleep_id, 'spo2');
   const movement = getSleepMovement(s.sleep_id);
   const events = getSleepEventCounts(s.sleep_id);
-  const notes = notesForRecord('sleep', s.sleep_id);
+  const notes = noteIndex().notesFor('sleep', s.calendar_date);
   const off = s.timezone_offset_hours;
 
   const hrvStatus = s.hrv_status as string | null;

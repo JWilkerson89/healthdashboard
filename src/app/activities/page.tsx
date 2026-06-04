@@ -1,16 +1,6 @@
 import Link from 'next/link';
-import {
-  Box,
-  Typography,
-  Card,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Chip,
-} from '@mui/material';
-import { listActivities, noteSummaryByRecord } from '@/lib/queries';
+import { Box, Typography, Card, Chip } from '@mui/material';
+import { listActivities, noteIndex } from '@/lib/queries';
 import NoteDot from '@/components/NoteDot';
 import {
   humanize,
@@ -24,67 +14,88 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+// Grid (not <table>) so rows can be <a> links with valid <a><div> nesting.
+const COLS = '110px minmax(160px, 1fr) 96px 86px 76px 64px';
+
+const headSx = { textAlign: 'right' as const };
+
 export default function ActivitiesPage() {
   const activities = listActivities();
-  const noteMap = noteSummaryByRecord('activity');
+  const notes = noteIndex();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Typography variant="h4">Activities</Typography>
       <Card>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Activity</TableCell>
-              <TableCell align="right">Duration</TableCell>
-              <TableCell align="right">Distance</TableCell>
-              <TableCell align="right">Avg HR</TableCell>
-              <TableCell align="right">Load</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
+        <Box sx={{ overflowX: 'auto' }}>
+          <Box sx={{ minWidth: 640 }}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: COLS,
+                gap: 1.5,
+                px: 2,
+                py: 1,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">Date</Typography>
+              <Typography variant="caption" color="text.secondary">Activity</Typography>
+              <Typography variant="caption" color="text.secondary" sx={headSx}>Duration</Typography>
+              <Typography variant="caption" color="text.secondary" sx={headSx}>Distance</Typography>
+              <Typography variant="caption" color="text.secondary" sx={headSx}>Avg HR</Typography>
+              <Typography variant="caption" color="text.secondary" sx={headSx}>Load</Typography>
+            </Box>
+
             {activities.map((a) => {
               const local = toLocal(a.start_ts, a.timezone_offset_hours);
               const miles = metersToMiles(a.distance);
               return (
-                <TableRow
+                <Box
                   key={a.activity_id}
                   component={Link}
                   href={`/activities/${a.activity_id}`}
                   sx={{
+                    display: 'grid',
+                    gridTemplateColumns: COLS,
+                    gap: 1.5,
+                    px: 2,
+                    py: 1.25,
+                    alignItems: 'center',
                     textDecoration: 'none',
-                    cursor: 'pointer',
-                    display: 'table-row',
+                    color: 'inherit',
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
                     '&:hover': { bgcolor: 'action.hover' },
                   }}
                 >
-                  <TableCell>
-                    {fmtDateShort(local.toISOString().slice(0, 10))}
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                  <Box>
+                    <Typography variant="body2">{fmtDateShort(local.toISOString().slice(0, 10))}</Typography>
+                    <Typography variant="caption" color="text.secondary">
                       {fmtTime(local)}
                     </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                    <Typography variant="body2" noWrap>
                       {a.activity_name || humanize(a.activity_type_key)}
-                      <Chip label={humanize(a.activity_type_key)} size="small" variant="outlined" />
-                      <NoteDot summary={noteMap.get(a.activity_id)} />
-                    </Box>
-                  </TableCell>
-                  <TableCell align="right">{fmtDuration(a.duration)}</TableCell>
-                  <TableCell align="right">
+                    </Typography>
+                    <Chip label={humanize(a.activity_type_key)} size="small" variant="outlined" />
+                    <NoteDot summary={notes.summaryFor('activity', local.toISOString().slice(0, 10))} />
+                  </Box>
+                  <Typography variant="body2" sx={headSx}>{fmtDuration(a.duration)}</Typography>
+                  <Typography variant="body2" sx={headSx}>
                     {miles && miles > 0.05 ? `${miles.toFixed(2)} mi` : '—'}
-                  </TableCell>
-                  <TableCell align="right">
-                    {a.average_hr ? `${Math.round(a.average_hr)}` : '—'}
-                  </TableCell>
-                  <TableCell align="right">{fmtNum(a.activity_training_load)}</TableCell>
-                </TableRow>
+                  </Typography>
+                  <Typography variant="body2" sx={headSx}>
+                    {a.average_hr ? Math.round(a.average_hr) : '—'}
+                  </Typography>
+                  <Typography variant="body2" sx={headSx}>{fmtNum(a.activity_training_load)}</Typography>
+                </Box>
               );
             })}
-          </TableBody>
-        </Table>
+          </Box>
+        </Box>
       </Card>
     </Box>
   );
