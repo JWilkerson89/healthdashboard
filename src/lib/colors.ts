@@ -21,6 +21,25 @@ export const MACRO = {
   carbs: '#ff8a65',
 } as const;
 
+// Consult trend status colors.
+export const STATUS: Record<string, string> = {
+  critical: '#ff5252',
+  worsening: '#ff5252',
+  warning: '#ffb74d',
+  elevated: '#ffb74d',
+  low: '#ffd54f',
+  normal: '#69f0ae',
+  improving: '#69f0ae',
+};
+
+// Recommendation priority colors.
+export const PRIORITY: Record<string, string> = {
+  critical: '#ff5252',
+  high: '#ffb74d',
+  normal: '#58a6ff',
+  low: '#8b949e',
+};
+
 // Health-journal category colors.
 export const CATEGORY: Record<string, string> = {
   consultation: '#58a6ff',

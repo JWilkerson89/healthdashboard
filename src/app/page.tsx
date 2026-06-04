@@ -7,9 +7,14 @@ import {
   getProfile,
   latestReadiness,
   noteIndex,
+  getConsult,
+  getTrends,
+  openRecommendations,
 } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
 import NoteDot from '@/components/NoteDot';
+import ConsultBanner from '@/components/ConsultBanner';
+import { STATUS } from '@/lib/colors';
 import TrendCard from '@/components/TrendCard';
 import { ACCENT } from '@/lib/colors';
 import {
@@ -37,6 +42,20 @@ export default function Dashboard() {
   const profile = getProfile();
   const recent = listActivities().slice(0, 8);
   const notes = noteIndex();
+  const consult = getConsult();
+  const consultTrends = consult ? getTrends(consult.date) : [];
+  const openRecs = openRecommendations();
+  const consultWorst = consultTrends.some((t) => t.status === 'critical')
+    ? 'critical'
+    : consultTrends.some((t) => t.status === 'warning' || t.status === 'worsening')
+      ? 'warning'
+      : 'normal';
+  const consultAlerts =
+    consultTrends.filter((t) =>
+      ['critical', 'warning', 'low', 'worsening', 'elevated'].includes(t.status),
+    ).length +
+    openRecs.filter((r) => r.priority === 'critical' || r.priority === 'high').length;
+
   const readiness = latestReadiness();
   const readinessColor =
     { HIGH: ACCENT.steps, MODERATE: ACCENT.sleep, LOW: ACCENT.battery, POOR: ACCENT.rhr }[
@@ -59,6 +78,16 @@ export default function Dashboard() {
             : ''}
         </Typography>
       </Box>
+
+      {consult && (
+        <ConsultBanner
+          date={consult.date}
+          tone={consult.tone}
+          summary={consult.summary}
+          accent={STATUS[consultWorst] ?? STATUS.normal}
+          alertCount={consultAlerts}
+        />
+      )}
 
       {latest && (
         <Box sx={GRID}>

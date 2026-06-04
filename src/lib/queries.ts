@@ -658,6 +658,114 @@ export function listSupplements(): Supplement[] {
     .all() as Supplement[];
 }
 
+// ---------- Daily consult (source of record) ----------
+
+export interface Consult {
+  id: number;
+  date: string;
+  created_at: string;
+  summary: string | null;
+  critical_findings: string | null;
+  tone: string | null;
+  full_body: string | null;
+}
+
+export interface Snapshot {
+  date: string;
+  sleep_score: number | null;
+  sleep_duration_min: number | null;
+  hrv: number | null;
+  resting_hr: number | null;
+  spo2_low: number | null;
+  body_battery_avg: number | null;
+  stress_avg: number | null;
+  total_steps: number | null;
+  training_rec: string | null;
+  supplement_note: string | null;
+  protein_g: number | null;
+  fat_g: number | null;
+  carbs_g: number | null;
+  calories: number | null;
+  status: string | null;
+}
+
+export interface Trend {
+  id: number;
+  metric: string;
+  date: string;
+  value: number | null;
+  unit: string | null;
+  status: string;
+  note: string | null;
+}
+
+export interface Recommendation {
+  id: number;
+  date: string;
+  priority: string;
+  category: string;
+  recommendation: string;
+  completed: number;
+  resolved_at: string | null;
+}
+
+export function consultDates(): string[] {
+  return (
+    db().prepare(`SELECT date FROM health_consults ORDER BY date DESC`).all() as {
+      date: string;
+    }[]
+  ).map((r) => r.date);
+}
+
+/** A consult by date, or the most recent one. */
+export function getConsult(date?: string): Consult | undefined {
+  if (date) {
+    return db().prepare(`SELECT * FROM health_consults WHERE date = ?`).get(date) as
+      | Consult
+      | undefined;
+  }
+  return db()
+    .prepare(`SELECT * FROM health_consults ORDER BY date DESC LIMIT 1`)
+    .get() as Consult | undefined;
+}
+
+export function getSnapshot(date: string): Snapshot | undefined {
+  return db()
+    .prepare(`SELECT * FROM daily_health_snapshots WHERE date = ?`)
+    .get(date) as Snapshot | undefined;
+}
+
+export function getTrends(date: string): Trend[] {
+  return db()
+    .prepare(
+      `SELECT * FROM health_trends WHERE date = ?
+        ORDER BY CASE status
+                   WHEN 'critical' THEN 0 WHEN 'worsening' THEN 1
+                   WHEN 'warning' THEN 2 WHEN 'elevated' THEN 3 WHEN 'low' THEN 4
+                   ELSE 5 END, metric`,
+    )
+    .all(date) as Trend[];
+}
+
+const PRIORITY_ORDER = `CASE priority WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END`;
+
+/** Open (incomplete) recommendations across all consults, by priority. */
+export function openRecommendations(): Recommendation[] {
+  return db()
+    .prepare(
+      `SELECT * FROM health_recommendations WHERE completed = 0
+        ORDER BY ${PRIORITY_ORDER}, date ASC`,
+    )
+    .all() as Recommendation[];
+}
+
+/** One metric's values over time (for trend charts as history accumulates). */
+export function metricHistory(metric: string): { date: string; value: number | null }[] {
+  return db()
+    .prepare(`SELECT date, value FROM health_trends WHERE metric = ? ORDER BY date ASC`)
+    .all(metric) as { date: string; value: number | null }[];
+}
+
 // ---------- Reverse-linked notes (note ⇄ asset) ----------
 //
 // health_notes.linked_records is a JSON array of string references in the form
