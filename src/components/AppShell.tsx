@@ -25,6 +25,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import MonitorWeightIcon from '@mui/icons-material/MonitorWeight';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import HistoryIcon from '@mui/icons-material/History';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import MenuIcon from '@mui/icons-material/Menu';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -39,6 +40,7 @@ const NAV = [
   { href: '/body', label: 'Body', icon: <MonitorWeightIcon /> },
   { href: '/nutrition', label: 'Nutrition', icon: <RestaurantIcon /> },
   { href: '/journal', label: 'Journal', icon: <MenuBookIcon /> },
+  { href: '/timeline', label: 'Timeline', icon: <HistoryIcon /> },
   { href: '/explorer', label: 'Explorer', icon: <TimelineIcon /> },
 ];
 

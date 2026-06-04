@@ -15,8 +15,10 @@ import {
   getTrends,
   openRecommendations,
   consultDates,
+  eventsForDate,
 } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
+import EventTimeline from '@/components/EventTimeline';
 import Markdown from '@/components/Markdown';
 import { STATUS, PRIORITY } from '@/lib/colors';
 import { fmtDateLong, fmtDateShort, fmtNum, humanize } from '@/lib/format';
@@ -48,6 +50,7 @@ export default async function ConsultPage({
   const snapshot = getSnapshot(consult.date);
   const trends = getTrends(consult.date);
   const openRecs = openRecommendations();
+  const events = eventsForDate(consult.date);
 
   // Banner tint follows the worst trend status for the day.
   const worst = trends.find((t) => t.status === 'critical')
@@ -255,6 +258,16 @@ export default async function ConsultPage({
               </CardContent>
             </Card>
           )}
+        </Box>
+      )}
+
+      {/* Events on this day */}
+      {events.length > 0 && (
+        <Box>
+          <Typography variant="h6" sx={{ mb: 1.5 }}>
+            Events
+          </Typography>
+          <EventTimeline events={events} />
         </Box>
       )}
 

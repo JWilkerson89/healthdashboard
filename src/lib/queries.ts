@@ -766,6 +766,37 @@ export function metricHistory(metric: string): { date: string; value: number | n
     .all(metric) as { date: string; value: number | null }[];
 }
 
+// ---------- Health events (timeline) ----------
+
+export interface HealthEvent {
+  id: number;
+  date: string;
+  category: string;
+  title: string;
+  details: string | null;
+  severity: string | null;
+  resolved: number;
+  resolved_at: string | null;
+}
+
+export function listHealthEvents(): HealthEvent[] {
+  return db()
+    .prepare(
+      `SELECT id, date, category, title, details, severity, resolved, resolved_at
+         FROM health_events ORDER BY date DESC, id DESC`,
+    )
+    .all() as HealthEvent[];
+}
+
+export function eventsForDate(date: string): HealthEvent[] {
+  return db()
+    .prepare(
+      `SELECT id, date, category, title, details, severity, resolved, resolved_at
+         FROM health_events WHERE date = ? ORDER BY id DESC`,
+    )
+    .all(date) as HealthEvent[];
+}
+
 // ---------- Reverse-linked notes (note ⇄ asset) ----------
 //
 // health_notes.linked_records is a JSON array of string references in the form
