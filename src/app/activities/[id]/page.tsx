@@ -18,6 +18,7 @@ import {
   getActivityPath,
   getStrengthSets,
   getActivitySeries,
+  getActivityLaps,
 } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
 import ZoneBar from '@/components/ZoneBar';
@@ -37,6 +38,13 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+/** Pace from a lap's distance (m) and time (s), as "M:SS /mi" or "—". */
+function lapPace(distM: number | undefined, timeS: number | undefined): string {
+  if (!distM || distM < 50 || !timeS) return '—';
+  const secPerMile = timeS / (distM / 1609.344);
+  return `${fmtDuration(secPerMile)} /mi`;
+}
+
 export default async function ActivityDetail({
   params,
 }: {
@@ -49,6 +57,11 @@ export default async function ActivityDetail({
   const path = getActivityPath(activity.activity_id);
   const sets = getStrengthSets(activity.activity_id);
   const hr = getActivitySeries(activity.activity_id, 'heart_rate');
+  const laps = getActivityLaps(activity.activity_id);
+  // Show laps only when there's more than one and they carry useful signal.
+  const showLaps =
+    laps.length > 1 &&
+    laps.some((l) => (l.metrics.total_distance ?? 0) > 0 || (l.metrics.avg_heart_rate ?? 0) > 0);
   const local = toLocal(activity.start_ts, activity.timezone_offset_hours);
   const miles = metersToMiles(activity.distance);
   const isStrength = sets.length > 0;
@@ -146,6 +159,51 @@ export default async function ActivityDetail({
               unit="bpm"
               offsetHours={activity.timezone_offset_hours}
             />
+          </CardContent>
+        </Card>
+      )}
+
+      {showLaps && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Laps
+            </Typography>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>#</TableCell>
+                  <TableCell align="right">Distance</TableCell>
+                  <TableCell align="right">Time</TableCell>
+                  <TableCell align="right">Pace</TableCell>
+                  <TableCell align="right">Avg HR</TableCell>
+                  <TableCell align="right">Max HR</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {laps.map((l) => {
+                  const dist = l.metrics.total_distance;
+                  const time = l.metrics.total_timer_time ?? l.metrics.total_elapsed_time;
+                  const mi = metersToMiles(dist);
+                  return (
+                    <TableRow key={l.lap_idx}>
+                      <TableCell>{l.lap_idx + 1}</TableCell>
+                      <TableCell align="right">
+                        {mi && mi > 0.01 ? `${mi.toFixed(2)} mi` : '—'}
+                      </TableCell>
+                      <TableCell align="right">{fmtDuration(time)}</TableCell>
+                      <TableCell align="right">{lapPace(dist, time)}</TableCell>
+                      <TableCell align="right">
+                        {l.metrics.avg_heart_rate ? Math.round(l.metrics.avg_heart_rate) : '—'}
+                      </TableCell>
+                      <TableCell align="right">
+                        {l.metrics.max_heart_rate ? Math.round(l.metrics.max_heart_rate) : '—'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}

@@ -12,6 +12,8 @@ import {
   getSleep,
   getSleepLevels,
   getSleepSeries,
+  getSleepMovement,
+  getSleepEventCounts,
 } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
 import SleepStages from '@/components/SleepStages';
@@ -33,6 +35,8 @@ export default async function SleepDetail({
   const levels = getSleepLevels(s.sleep_id);
   const hrv = getSleepSeries(s.sleep_id, 'hrv');
   const spo2 = getSleepSeries(s.sleep_id, 'spo2');
+  const movement = getSleepMovement(s.sleep_id);
+  const events = getSleepEventCounts(s.sleep_id);
   const off = s.timezone_offset_hours;
 
   const hrvStatus = s.hrv_status as string | null;
@@ -107,6 +111,22 @@ export default async function SleepDetail({
               Overnight SpO₂
             </Typography>
             <TimeSeriesChart points={spo2} color={ACCENT.spo2} unit="%" offsetHours={off} area />
+          </CardContent>
+        </Card>
+      )}
+
+      {(movement.length > 1 || events.restless > 0 || events.breathing > 0) && (
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 1, flexWrap: 'wrap' }}>
+              <Typography variant="h6">Movement &amp; Disruptions</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {events.restless} restless · {events.breathing} breathing events
+              </Typography>
+            </Box>
+            {movement.length > 1 && (
+              <TimeSeriesChart points={movement} color={ACCENT.stress} unit="" offsetHours={off} area />
+            )}
           </CardContent>
         </Card>
       )}

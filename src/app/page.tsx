@@ -5,6 +5,7 @@ import {
   getLatestSummary,
   listActivities,
   getProfile,
+  latestReadiness,
 } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
 import TrendCard from '@/components/TrendCard';
@@ -33,6 +34,11 @@ export default function Dashboard() {
   const latest = getLatestSummary();
   const profile = getProfile();
   const recent = listActivities().slice(0, 8);
+  const readiness = latestReadiness();
+  const readinessColor =
+    { HIGH: ACCENT.steps, MODERATE: ACCENT.sleep, LOW: ACCENT.battery, POOR: ACCENT.rhr }[
+      (readiness?.level ?? '').toUpperCase()
+    ] ?? ACCENT.hrv;
 
   const trend = (key: keyof (typeof summaries)[number]) =>
     summaries.map((s) => ({ date: s.date, value: s[key] as number | null }));
@@ -53,6 +59,9 @@ export default function Dashboard() {
 
       {latest && (
         <Box sx={GRID}>
+          {readiness && (
+            <StatTile label="Readiness" value={fmtNum(readiness.score)} accent={readinessColor} sub={humanize(readiness.level)} />
+          )}
           <StatTile label="Sleep Score" value={fmtNum(latest.sleep_score)} accent={ACCENT.sleep} sub={fmtMinutes(latest.sleep_duration_min)} />
           <StatTile label="HRV" value={fmtNum(latest.hrv, 1)} unit="ms" accent={ACCENT.hrv} />
           <StatTile label="Resting HR" value={fmtNum(latest.resting_hr)} unit="bpm" accent={ACCENT.rhr} />

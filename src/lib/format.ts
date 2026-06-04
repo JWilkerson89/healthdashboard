@@ -87,6 +87,25 @@ export function fmtDateShort(date: string): string {
   });
 }
 
+/**
+ * Personal-record value formatting depends on what the record measures, which
+ * we infer from its label: distances (Longest) → km, power → W, ascent → m,
+ * step counts → number, otherwise a time PR in seconds → H:MM:SS.
+ */
+export function fmtPR(label: string | null, value: number | null): string {
+  if (value == null) return '—';
+  const l = (label ?? '').toLowerCase();
+  if (l.includes('power')) return `${Math.round(value)} W`;
+  if (l.includes('ascent')) return `${Math.round(value)} m`;
+  if (l.includes('streak')) return `${Math.round(value)} days`;
+  if (l.includes('steps')) return Math.round(value).toLocaleString();
+  if (l.includes('longest')) {
+    const km = value / 1000;
+    return km >= 1 ? `${km.toFixed(2)} km` : `${Math.round(value)} m`;
+  }
+  return fmtDuration(value);
+}
+
 /** Title-case a Garmin enum key like "lap_swimming" → "Lap Swimming". */
 export function humanize(key: string | null | undefined): string {
   if (!key) return '—';

@@ -18,6 +18,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import BedtimeIcon from '@mui/icons-material/Bedtime';
 import ScienceIcon from '@mui/icons-material/Science';
 import MonitorWeightIcon from '@mui/icons-material/MonitorWeight';
@@ -29,6 +30,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 const NAV = [
   { href: '/', label: 'Dashboard', icon: <DashboardIcon /> },
   { href: '/activities', label: 'Activities', icon: <DirectionsRunIcon /> },
+  { href: '/training', label: 'Training', icon: <FitnessCenterIcon /> },
   { href: '/sleep', label: 'Sleep', icon: <BedtimeIcon /> },
   { href: '/labs', label: 'Labs', icon: <ScienceIcon /> },
   { href: '/body', label: 'Body', icon: <MonitorWeightIcon /> },

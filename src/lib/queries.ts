@@ -426,6 +426,185 @@ export function metricSeries(key: string, date: string): TimePoint[] {
     .all(userId(), from, to) as TimePoint[];
 }
 
+// ---------- Training / performance ----------
+
+export interface TrainingReadiness {
+  timestamp: string;
+  timezone_offset_hours: number;
+  score: number | null;
+  level: string | null;
+  recovery_time: number | null;
+  feedback_long: string | null;
+  sleep_score_factor_percent: number | null;
+  sleep_score_factor_feedback: string | null;
+  recovery_time_factor_percent: number | null;
+  recovery_time_factor_feedback: string | null;
+  acwr_factor_percent: number | null;
+  acwr_factor_feedback: string | null;
+  hrv_factor_percent: number | null;
+  hrv_factor_feedback: string | null;
+  stress_history_factor_percent: number | null;
+  stress_history_factor_feedback: string | null;
+  sleep_history_factor_percent: number | null;
+  sleep_history_factor_feedback: string | null;
+}
+
+export function latestReadiness(): TrainingReadiness | undefined {
+  return db()
+    .prepare(
+      `SELECT * FROM training_readiness WHERE user_id = ?
+        ORDER BY timestamp DESC LIMIT 1`,
+    )
+    .get(userId()) as TrainingReadiness | undefined;
+}
+
+/** Last readiness score per day, ascending (for trend charts). */
+export function readinessTrend(): { date: string; value: number | null }[] {
+  return db()
+    .prepare(
+      `SELECT date(timestamp) AS date, score AS value, MAX(timestamp)
+         FROM training_readiness WHERE user_id = ?
+        GROUP BY date(timestamp) ORDER BY date ASC`,
+    )
+    .all(userId()) as { date: string; value: number | null }[];
+}
+
+export interface TrainingLoad {
+  date: string;
+  acwr_percent: number | null;
+  acwr_status: string | null;
+  training_status_feedback_phrase: string | null;
+  training_balance_feedback_phrase: string | null;
+  daily_training_load_acute: number | null;
+  daily_training_load_chronic: number | null;
+}
+
+export function latestTrainingLoad(): TrainingLoad | undefined {
+  return db()
+    .prepare(
+      `SELECT date, acwr_percent, acwr_status, training_status_feedback_phrase,
+              training_balance_feedback_phrase, daily_training_load_acute,
+              daily_training_load_chronic
+         FROM training_load WHERE user_id = ?
+        ORDER BY date DESC LIMIT 1`,
+    )
+    .get(userId()) as TrainingLoad | undefined;
+}
+
+export function trainingLoadTrend(): {
+  date: string;
+  acute: number | null;
+  chronic: number | null;
+}[] {
+  return db()
+    .prepare(
+      `SELECT date, daily_training_load_acute AS acute,
+              daily_training_load_chronic AS chronic
+         FROM training_load WHERE user_id = ? ORDER BY date ASC`,
+    )
+    .all(userId()) as { date: string; acute: number | null; chronic: number | null }[];
+}
+
+export function vo2MaxTrend(): { date: string; value: number | null }[] {
+  return db()
+    .prepare(
+      `SELECT date, vo2_max_generic AS value FROM vo2_max
+        WHERE user_id = ? ORDER BY date ASC`,
+    )
+    .all(userId()) as { date: string; value: number | null }[];
+}
+
+export interface RacePredictions {
+  date: string;
+  time_5k: number | null;
+  time_10k: number | null;
+  time_half_marathon: number | null;
+  time_marathon: number | null;
+}
+
+export function latestRacePredictions(): RacePredictions | undefined {
+  return db()
+    .prepare(
+      `SELECT date, time_5k, time_10k, time_half_marathon, time_marathon
+         FROM race_predictions WHERE user_id = ?
+        ORDER BY date DESC LIMIT 1`,
+    )
+    .get(userId()) as RacePredictions | undefined;
+}
+
+export interface PersonalRecord {
+  type_id: number;
+  label: string | null;
+  value: number | null;
+  timestamp: string;
+  activity_id: number | null;
+}
+
+export function personalRecords(): PersonalRecord[] {
+  return db()
+    .prepare(
+      `SELECT type_id, label, value, timestamp, activity_id
+         FROM personal_record
+        WHERE user_id = ? AND latest = 1 AND label IS NOT NULL AND label <> ''
+        ORDER BY type_id ASC`,
+    )
+    .all(userId()) as PersonalRecord[];
+}
+
+// ---------- Sleep enrichment ----------
+
+export function getSleepMovement(id: number): TimePoint[] {
+  return db()
+    .prepare(
+      `SELECT timestamp AS t, activity_level AS v FROM sleep_movement
+        WHERE sleep_id = ? ORDER BY timestamp ASC`,
+    )
+    .all(id) as TimePoint[];
+}
+
+export function getSleepEventCounts(id: number): {
+  restless: number;
+  breathing: number;
+} {
+  const restless = (
+    db()
+      .prepare(`SELECT COUNT(*) AS c FROM sleep_restless_moment WHERE sleep_id = ?`)
+      .get(id) as { c: number }
+  ).c;
+  const breathing = (
+    db()
+      .prepare(`SELECT COUNT(*) AS c FROM breathing_disruption WHERE sleep_id = ?`)
+      .get(id) as { c: number }
+  ).c;
+  return { restless, breathing };
+}
+
+// ---------- Activity laps ----------
+
+export interface LapRow {
+  lap_idx: number;
+  metrics: Record<string, number>;
+}
+
+export function getActivityLaps(id: number): LapRow[] {
+  const rows = db()
+    .prepare(
+      `SELECT lap_idx, name, value FROM activity_lap_metric
+        WHERE activity_id = ? ORDER BY lap_idx ASC`,
+    )
+    .all(id) as { lap_idx: number; name: string; value: number }[];
+  const map = new Map<number, LapRow>();
+  for (const r of rows) {
+    let lap = map.get(r.lap_idx);
+    if (!lap) {
+      lap = { lap_idx: r.lap_idx, metrics: {} };
+      map.set(r.lap_idx, lap);
+    }
+    lap.metrics[r.name] = r.value;
+  }
+  return [...map.values()];
+}
+
 // ---------- Profile / header stats ----------
 
 export interface Profile {
