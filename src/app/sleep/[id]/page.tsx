@@ -14,7 +14,9 @@ import {
   getSleepSeries,
   getSleepMovement,
   getSleepEventCounts,
+  notesForRecord,
 } from '@/lib/queries';
+import LinkedNotes from '@/components/LinkedNotes';
 import StatTile from '@/components/StatTile';
 import SleepStages from '@/components/SleepStages';
 import TimeSeriesChart from '@/components/TimeSeriesChart';
@@ -37,6 +39,7 @@ export default async function SleepDetail({
   const spo2 = getSleepSeries(s.sleep_id, 'spo2');
   const movement = getSleepMovement(s.sleep_id);
   const events = getSleepEventCounts(s.sleep_id);
+  const notes = notesForRecord('sleep', s.sleep_id);
   const off = s.timezone_offset_hours;
 
   const hrvStatus = s.hrv_status as string | null;
@@ -64,6 +67,8 @@ export default async function SleepDetail({
           {feedback ? ` · ${feedback.replace(/_/g, ' ').toLowerCase()}` : ''}
         </Typography>
       </Box>
+
+      {notes.length > 0 && <LinkedNotes notes={notes} />}
 
       <Box
         sx={{

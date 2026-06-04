@@ -10,7 +10,8 @@ import {
   TableRow,
   Chip,
 } from '@mui/material';
-import { listActivities } from '@/lib/queries';
+import { listActivities, noteSummaryByRecord } from '@/lib/queries';
+import NoteDot from '@/components/NoteDot';
 import {
   humanize,
   metersToMiles,
@@ -25,6 +26,7 @@ export const dynamic = 'force-dynamic';
 
 export default function ActivitiesPage() {
   const activities = listActivities();
+  const noteMap = noteSummaryByRecord('activity');
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -67,6 +69,7 @@ export default function ActivitiesPage() {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       {a.activity_name || humanize(a.activity_type_key)}
                       <Chip label={humanize(a.activity_type_key)} size="small" variant="outlined" />
+                      <NoteDot summary={noteMap.get(a.activity_id)} />
                     </Box>
                   </TableCell>
                   <TableCell align="right">{fmtDuration(a.duration)}</TableCell>

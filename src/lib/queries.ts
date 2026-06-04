@@ -658,6 +658,89 @@ export function listSupplements(): Supplement[] {
     .all() as Supplement[];
 }
 
+// ---------- Reverse-linked notes (note ⇄ asset) ----------
+//
+// health_notes.linked_records is a JSON array of {type, id} objects, e.g.
+// [{"type":"activity","id":23104921094},{"type":"blood_panel","id":5}].
+// These helpers index it backwards: given an asset, find the notes about it.
+
+export interface NoteSummary {
+  count: number;
+  category: string; // representative category (high-priority/most-recent wins)
+  highPriority: boolean;
+}
+
+/** Notes linking one specific record. */
+export function notesForRecord(type: string, id: number): HealthNote[] {
+  return db()
+    .prepare(
+      `SELECT hn.id, hn.entry_date, hn.category, hn.source, hn.content,
+              hn.action_items, hn.linked_records, hn.priority
+         FROM health_notes hn
+        WHERE hn.linked_records IS NOT NULL
+          AND json_valid(hn.linked_records)
+          AND EXISTS (
+            SELECT 1 FROM json_each(hn.linked_records) je
+             WHERE json_extract(je.value, '$.type') = ?
+               AND json_extract(je.value, '$.id') = ?
+          )
+        ORDER BY hn.entry_date DESC, hn.id DESC`,
+    )
+    .all(type, id) as HealthNote[];
+}
+
+/** Notes linking any of the given records (deduped). */
+export function notesForRecords(type: string, ids: number[]): HealthNote[] {
+  if (ids.length === 0) return [];
+  const placeholders = ids.map(() => '?').join(',');
+  return db()
+    .prepare(
+      `SELECT DISTINCT hn.id, hn.entry_date, hn.category, hn.source, hn.content,
+              hn.action_items, hn.linked_records, hn.priority
+         FROM health_notes hn, json_each(hn.linked_records) je
+        WHERE json_valid(hn.linked_records)
+          AND json_extract(je.value, '$.type') = ?
+          AND json_extract(je.value, '$.id') IN (${placeholders})
+        ORDER BY hn.entry_date DESC, hn.id DESC`,
+    )
+    .all(type, ...ids) as HealthNote[];
+}
+
+/** Map of record id → note summary, for indicator dots across a whole list. */
+export function noteSummaryByRecord(type: string): Map<number, NoteSummary> {
+  const rows = db()
+    .prepare(
+      `SELECT json_extract(je.value, '$.id') AS rid, hn.category, hn.priority,
+              hn.entry_date
+         FROM health_notes hn, json_each(hn.linked_records) je
+        WHERE json_valid(hn.linked_records)
+          AND json_extract(je.value, '$.type') = ?
+        ORDER BY hn.entry_date DESC`,
+    )
+    .all(type) as { rid: number; category: string; priority: string | null; entry_date: string }[];
+
+  const map = new Map<number, NoteSummary>();
+  for (const r of rows) {
+    if (r.rid == null) continue;
+    const existing = map.get(r.rid);
+    if (!existing) {
+      map.set(r.rid, {
+        count: 1,
+        category: r.category,
+        highPriority: r.priority === 'high',
+      });
+    } else {
+      existing.count += 1;
+      // Promote category to a high-priority note's category if one exists.
+      if (r.priority === 'high' && !existing.highPriority) {
+        existing.category = r.category;
+        existing.highPriority = true;
+      }
+    }
+  }
+  return map;
+}
+
 // ---------- Profile / header stats ----------
 
 export interface Profile {

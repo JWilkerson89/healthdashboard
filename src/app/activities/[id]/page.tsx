@@ -19,7 +19,9 @@ import {
   getStrengthSets,
   getActivitySeries,
   getActivityLaps,
+  notesForRecord,
 } from '@/lib/queries';
+import LinkedNotes from '@/components/LinkedNotes';
 import StatTile from '@/components/StatTile';
 import ZoneBar from '@/components/ZoneBar';
 import ActivityMap from '@/components/ActivityMap';
@@ -58,6 +60,7 @@ export default async function ActivityDetail({
   const sets = getStrengthSets(activity.activity_id);
   const hr = getActivitySeries(activity.activity_id, 'heart_rate');
   const laps = getActivityLaps(activity.activity_id);
+  const notes = notesForRecord('activity', activity.activity_id);
   // Show laps only when there's more than one and they carry useful signal.
   const showLaps =
     laps.length > 1 &&
@@ -87,6 +90,8 @@ export default async function ActivityDetail({
           {activity.location_name ? ` · ${activity.location_name}` : ''}
         </Typography>
       </Box>
+
+      {notes.length > 0 && <LinkedNotes notes={notes} />}
 
       <Box
         sx={{

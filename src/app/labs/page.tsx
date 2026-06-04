@@ -10,7 +10,14 @@ import {
   TableRow,
   Chip,
 } from '@mui/material';
-import { listBloodPanels, type BloodPanelRow } from '@/lib/queries';
+import {
+  listBloodPanels,
+  noteSummaryByRecord,
+  notesForRecords,
+  type BloodPanelRow,
+} from '@/lib/queries';
+import NoteDot from '@/components/NoteDot';
+import LinkedNotes from '@/components/LinkedNotes';
 import { fmtDateLong, fmtNum } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +32,7 @@ function flagColor(flag: string | null): 'error' | 'warning' | 'default' {
 
 export default function LabsPage() {
   const rows = listBloodPanels();
+  const noteMap = noteSummaryByRecord('blood_panel');
 
   // Group by date (descending), preserving the query's test ordering within.
   const byDate = new Map<string, BloodPanelRow[]>();
@@ -42,6 +50,8 @@ export default function LabsPage() {
       )}
       {[...byDate.entries()].map(([date, panel]) => {
         const flagged = panel.filter((p) => p.flags).length;
+        const linkedIds = panel.filter((p) => noteMap.has(p.id)).map((p) => p.id);
+        const panelNotes = linkedIds.length ? notesForRecords('blood_panel', linkedIds) : [];
         return (
           <Card key={date}>
             <CardContent>
@@ -56,6 +66,11 @@ export default function LabsPage() {
                   <Chip size="small" color="warning" label={`${flagged} flagged`} />
                 )}
               </Box>
+              {panelNotes.length > 0 && (
+                <Box sx={{ mb: 1.5 }}>
+                  <LinkedNotes notes={panelNotes} />
+                </Box>
+              )}
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -69,7 +84,12 @@ export default function LabsPage() {
                 <TableBody>
                   {panel.map((p) => (
                     <TableRow key={p.id}>
-                      <TableCell>{p.test_name}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {p.test_name}
+                          <NoteDot summary={noteMap.get(p.id)} />
+                        </Box>
+                      </TableCell>
                       <TableCell align="right" sx={{ fontWeight: p.flags ? 700 : 400 }}>
                         {fmtNum(p.value, p.value != null && p.value % 1 !== 0 ? 2 : 0)}
                       </TableCell>

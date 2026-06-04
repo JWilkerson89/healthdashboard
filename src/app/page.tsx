@@ -6,8 +6,10 @@ import {
   listActivities,
   getProfile,
   latestReadiness,
+  noteSummaryByRecord,
 } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
+import NoteDot from '@/components/NoteDot';
 import TrendCard from '@/components/TrendCard';
 import { ACCENT } from '@/lib/colors';
 import {
@@ -34,6 +36,7 @@ export default function Dashboard() {
   const latest = getLatestSummary();
   const profile = getProfile();
   const recent = listActivities().slice(0, 8);
+  const noteMap = noteSummaryByRecord('activity');
   const readiness = latestReadiness();
   const readinessColor =
     { HIGH: ACCENT.steps, MODERATE: ACCENT.sleep, LOW: ACCENT.battery, POOR: ACCENT.rhr }[
@@ -118,9 +121,12 @@ export default function Dashboard() {
                   }}
                 >
                   <Box>
-                    <Typography variant="body1">
-                      {a.activity_name || humanize(a.activity_type_key)}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body1">
+                        {a.activity_name || humanize(a.activity_type_key)}
+                      </Typography>
+                      <NoteDot summary={noteMap.get(a.activity_id)} />
+                    </Box>
                     <Typography variant="caption" color="text.secondary">
                       {fmtDateLong(local.toISOString().slice(0, 10))} · {fmtTime(local)}
                     </Typography>

@@ -1,28 +1,10 @@
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-} from '@mui/material';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { Box, Typography, Card, CardContent, Chip } from '@mui/material';
 import { listHealthNotes, listSupplements, type Supplement } from '@/lib/queries';
-import Markdown from '@/components/Markdown';
+import NoteBody from '@/components/NoteBody';
 import { CATEGORY } from '@/lib/colors';
-import { fmtDateLong, humanize } from '@/lib/format';
+import { humanize } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
-
-function parseArray(json: string | null): string[] {
-  if (!json) return [];
-  try {
-    const v = JSON.parse(json);
-    return Array.isArray(v) ? v.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))) : [];
-  } catch {
-    return [];
-  }
-}
 
 const TIMING_LABEL: Record<string, string> = {
   morning: 'Morning',
@@ -107,59 +89,17 @@ export default function JournalPage() {
       {supplements.length > 0 && <SupplementStack supplements={supplements} />}
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {notes.map((n) => {
-          const actions = parseArray(n.action_items);
-          const linked = parseArray(n.linked_records);
-          const color = CATEGORY[n.category] ?? '#888';
-          return (
-            <Card key={n.id} sx={{ borderLeft: '3px solid', borderColor: color }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
-                  <Chip size="small" label={humanize(n.category)} sx={{ bgcolor: color, color: '#000' }} />
-                  {n.priority === 'high' && <Chip size="small" color="error" label="High priority" />}
-                  <Typography variant="caption" color="text.secondary">
-                    {fmtDateLong(n.entry_date)}
-                  </Typography>
-                  {n.source && n.source !== 'manual' && (
-                    <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-                      via {n.source}
-                    </Typography>
-                  )}
-                </Box>
-
-                <Markdown>{n.content}</Markdown>
-
-                {actions.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Divider sx={{ mb: 1 }} />
-                    <Typography variant="overline" color="text.secondary">
-                      Action items
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
-                      {actions.map((a, i) => (
-                        <Box key={i} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                          <CheckCircleOutlineIcon sx={{ fontSize: 16, mt: 0.3, color: 'text.secondary' }} />
-                          <Typography variant="body2">{a}</Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-
-                {linked.length > 0 && (
-                  <Box sx={{ mt: 1.5, display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Linked:
-                    </Typography>
-                    {linked.map((l, i) => (
-                      <Chip key={i} size="small" variant="outlined" label={l} />
-                    ))}
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+        {notes.map((n) => (
+          <Card
+            key={n.id}
+            id={`note-${n.id}`}
+            sx={{ borderLeft: '3px solid', borderColor: CATEGORY[n.category] ?? '#888', scrollMarginTop: 80 }}
+          >
+            <CardContent>
+              <NoteBody note={n} />
+            </CardContent>
+          </Card>
+        ))}
       </Box>
     </Box>
   );

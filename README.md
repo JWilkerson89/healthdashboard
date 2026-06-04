@@ -22,6 +22,21 @@ writes; this app only ever reads.
 - **Explorer** — raw minute-level time series (heart rate, stress, body battery,
   respiration, steps, intensity minutes, SpO₂, HRV) by day
 
+## Linked records (note ⇄ asset)
+
+`health_notes.linked_records` is a JSON array of typed references:
+
+```json
+[{"type": "activity", "id": 23104921094}, {"type": "blood_panel", "id": 5}]
+```
+
+Supported `type` values: `activity` (activity_id), `sleep` (sleep_id),
+`blood_panel` (blood_panels.id). When a note links a record, that asset's
+detail page shows a category-colored "linked notes" chip that expands the note
+inline, and its list rows / the dashboard show a small note dot. Empty arrays
+render nothing. Jarvis (or any writer) should emit exactly this shape so the
+reverse index in `queries.ts` (`notesForRecord`, `noteSummaryByRecord`) lights up.
+
 ## Running
 
 ```bash

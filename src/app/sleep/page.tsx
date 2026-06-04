@@ -9,13 +9,15 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import { listSleep } from '@/lib/queries';
+import { listSleep, noteSummaryByRecord } from '@/lib/queries';
+import NoteDot from '@/components/NoteDot';
 import { fmtMinutes, fmtDateShort, fmtNum } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
 export default function SleepPage() {
   const nights = listSleep();
+  const noteMap = noteSummaryByRecord('sleep');
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -48,7 +50,10 @@ export default function SleepPage() {
                 }}
               >
                 <TableCell>
-                  {n.calendar_date ? fmtDateShort(n.calendar_date) : '—'}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {n.calendar_date ? fmtDateShort(n.calendar_date) : '—'}
+                    <NoteDot summary={noteMap.get(n.sleep_id)} />
+                  </Box>
                 </TableCell>
                 <TableCell align="right">{fmtNum(n.score_overall_value)}</TableCell>
                 <TableCell align="right">
