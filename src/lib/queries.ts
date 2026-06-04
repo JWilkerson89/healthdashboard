@@ -605,6 +605,59 @@ export function getActivityLaps(id: number): LapRow[] {
   return [...map.values()];
 }
 
+// ---------- Health journal + supplements ----------
+
+export interface HealthNote {
+  id: number;
+  entry_date: string;
+  category: string;
+  source: string | null;
+  content: string;
+  action_items: string | null; // JSON array of strings
+  linked_records: string | null; // JSON
+  priority: string | null;
+}
+
+export function listHealthNotes(): HealthNote[] {
+  return db()
+    .prepare(
+      `SELECT id, entry_date, category, source, content, action_items,
+              linked_records, priority
+         FROM health_notes
+        ORDER BY entry_date DESC, id DESC`,
+    )
+    .all() as HealthNote[];
+}
+
+export interface Supplement {
+  id: number;
+  entry_date: string;
+  supplement: string;
+  dosage: string | null;
+  timing: string | null;
+  notes: string | null;
+  efficacy: string | null;
+  reason: string | null;
+  linked_note_id: number | null;
+}
+
+/** Current supplement stack, ordered by daily timing then name. */
+export function listSupplements(): Supplement[] {
+  return db()
+    .prepare(
+      `SELECT id, entry_date, supplement, dosage, timing, notes, efficacy,
+              reason, linked_note_id
+         FROM supplement_log
+        ORDER BY CASE lower(timing)
+                   WHEN 'morning' THEN 0
+                   WHEN 'throughout' THEN 1
+                   WHEN 'evening' THEN 2
+                   ELSE 3 END,
+                 supplement ASC`,
+    )
+    .all() as Supplement[];
+}
+
 // ---------- Profile / header stats ----------
 
 export interface Profile {

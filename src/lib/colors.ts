@@ -20,3 +20,14 @@ export const MACRO = {
   fat: '#ffd54f',
   carbs: '#ff8a65',
 } as const;
+
+// Health-journal category colors.
+export const CATEGORY: Record<string, string> = {
+  consultation: '#58a6ff',
+  supplement: '#4dd0e1',
+  calorie_trend: '#ffb74d',
+  lab_reminder: '#7c4dff',
+  observation: '#69f0ae',
+  intervention: '#ff5252',
+  strategy: '#ba68c8',
+};
