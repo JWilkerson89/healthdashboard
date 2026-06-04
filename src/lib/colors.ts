@@ -11,4 +11,12 @@ export const ACCENT = {
   stress: '#ff8a65',
   spo2: '#4dd0e1',
   load: '#ba68c8',
+  calories: '#ffb74d',
+} as const;
+
+// Macronutrient colors, shared by the nutrition bar and legend.
+export const MACRO = {
+  protein: '#4dd0e1',
+  fat: '#ffd54f',
+  carbs: '#ff8a65',
 } as const;

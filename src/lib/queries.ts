@@ -303,6 +303,55 @@ export function listBodyComp(): BodyCompRow[] {
     .all() as BodyCompRow[];
 }
 
+// ---------- Nutrition (meals) ----------
+
+export interface Meal {
+  id: number;
+  date: string;
+  meal_type: string | null;
+  protein: number | null;
+  fat: number | null;
+  carbs: number | null;
+  calories: number | null;
+  notes: string | null;
+  source: string | null;
+}
+
+export interface DailyNutrition {
+  date: string;
+  meals: number;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+}
+
+export function listMeals(): Meal[] {
+  return db()
+    .prepare(
+      `SELECT id, date, meal_type, protein, fat, carbs, calories, notes, source
+         FROM meals ORDER BY date DESC, id ASC`,
+    )
+    .all() as Meal[];
+}
+
+/** Per-day rollup of intake, most recent first. */
+export function dailyNutrition(): DailyNutrition[] {
+  return db()
+    .prepare(
+      `SELECT date,
+              COUNT(*)               AS meals,
+              COALESCE(SUM(calories), 0) AS calories,
+              COALESCE(SUM(protein), 0)  AS protein,
+              COALESCE(SUM(fat), 0)      AS fat,
+              COALESCE(SUM(carbs), 0)    AS carbs
+         FROM meals
+        GROUP BY date
+        ORDER BY date DESC`,
+    )
+    .all() as DailyNutrition[];
+}
+
 // ---------- Raw time-series explorer ----------
 
 export interface MetricDef {
