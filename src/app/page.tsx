@@ -15,7 +15,7 @@ import StatTile from '@/components/StatTile';
 import NoteDot from '@/components/NoteDot';
 import ConsultBanner from '@/components/ConsultBanner';
 import { STATUS } from '@/lib/colors';
-import TrendCard from '@/components/TrendCard';
+import TrendGrid from '@/components/TrendGrid';
 import { ACCENT } from '@/lib/colors';
 import {
   fmtNum,
@@ -62,9 +62,6 @@ export default function Dashboard() {
       (readiness?.level ?? '').toUpperCase()
     ] ?? ACCENT.hrv;
 
-  const trend = (key: keyof (typeof summaries)[number]) =>
-    summaries.map((s) => ({ date: s.date, value: s[key] as number | null }));
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Box>
@@ -103,25 +100,7 @@ export default function Dashboard() {
         </Box>
       )}
 
-      <Box>
-        <Typography variant="h6" sx={{ mb: 1.5 }}>
-          Trends · last {summaries.length} days
-        </Typography>
-        <Box
-          sx={{
-            display: 'grid',
-            gap: 2,
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          }}
-        >
-          <TrendCard title="HRV" unit="ms" data={trend('hrv')} colorKey="hrv" />
-          <TrendCard title="Sleep Score" data={trend('sleep_score')} colorKey="sleep" />
-          <TrendCard title="Resting HR" unit="bpm" data={trend('resting_hr')} colorKey="rhr" />
-          <TrendCard title="Steps" data={trend('total_steps')} colorKey="steps" />
-          <TrendCard title="Body Battery (avg)" data={trend('body_battery_avg')} colorKey="battery" />
-          <TrendCard title="Stress (avg)" data={trend('stress_avg')} colorKey="stress" />
-        </Box>
-      </Box>
+      <TrendGrid summaries={summaries} />
 
       <Box>
         <Typography variant="h6" sx={{ mb: 1.5 }}>

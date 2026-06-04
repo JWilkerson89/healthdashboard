@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import {
   Box,
   Typography,
@@ -19,6 +18,7 @@ import {
 } from '@/lib/queries';
 import StatTile from '@/components/StatTile';
 import EventTimeline from '@/components/EventTimeline';
+import DayNav from '@/components/DayNav';
 import Markdown from '@/components/Markdown';
 import { STATUS, PRIORITY } from '@/lib/colors';
 import { fmtDateLong, fmtDateShort, fmtNum, humanize } from '@/lib/format';
@@ -52,6 +52,11 @@ export default async function ConsultPage({
   const openRecs = openRecommendations();
   const events = eventsForDate(consult.date);
 
+  // dates are DESC: index+1 is older, index-1 is newer.
+  const idx = dates.indexOf(consult.date);
+  const olderDate = idx >= 0 ? dates[idx + 1] : undefined;
+  const newerDate = idx > 0 ? dates[idx - 1] : undefined;
+
   // Banner tint follows the worst trend status for the day.
   const worst = trends.find((t) => t.status === 'critical')
     ? 'critical'
@@ -66,27 +71,15 @@ export default async function ConsultPage({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <Typography variant="h4">Consult</Typography>
-        <Typography variant="body2" color="text.secondary">
-          {fmtDateLong(consult.date)}
-        </Typography>
-        {dates.length > 1 && (
-          <Box sx={{ display: 'flex', gap: 0.5, ml: 'auto', flexWrap: 'wrap' }}>
-            {dates.map((d) => (
-              <Chip
-                key={d}
-                component={Link}
-                href={`/consult?date=${d}`}
-                clickable
-                size="small"
-                label={fmtDateShort(d)}
-                variant={d === consult.date ? 'filled' : 'outlined'}
-                color={d === consult.date ? 'primary' : 'default'}
-              />
-            ))}
-          </Box>
-        )}
+        <Box sx={{ ml: 'auto' }}>
+          <DayNav
+            label={fmtDateLong(consult.date)}
+            prevHref={olderDate ? `/consult?date=${olderDate}` : undefined}
+            nextHref={newerDate ? `/consult?date=${newerDate}` : undefined}
+          />
+        </Box>
       </Box>
 
       {/* Tone banner */}

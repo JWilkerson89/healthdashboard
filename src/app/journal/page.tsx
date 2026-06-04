@@ -1,7 +1,6 @@
 import { Box, Typography, Card, CardContent, Chip } from '@mui/material';
 import { listHealthNotes, listSupplements, type Supplement } from '@/lib/queries';
-import NoteBody from '@/components/NoteBody';
-import { CATEGORY } from '@/lib/colors';
+import JournalNotes from '@/components/JournalNotes';
 import { humanize } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -88,19 +87,7 @@ export default function JournalPage() {
 
       {supplements.length > 0 && <SupplementStack supplements={supplements} />}
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {notes.map((n) => (
-          <Card
-            key={n.id}
-            id={`note-${n.id}`}
-            sx={{ borderLeft: '3px solid', borderColor: CATEGORY[n.category] ?? '#888', scrollMarginTop: 80 }}
-          >
-            <CardContent>
-              <NoteBody note={n} />
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
+      <JournalNotes notes={notes} />
     </Box>
   );
 }

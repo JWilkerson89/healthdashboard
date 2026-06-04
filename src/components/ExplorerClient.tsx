@@ -8,7 +8,10 @@ import {
   TextField,
   Typography,
   CircularProgress,
+  IconButton,
 } from '@mui/material';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TimeSeriesChart, { type TimePoint } from '@/components/TimeSeriesChart';
 import type { MetricDef } from '@/lib/queries';
 import type { AccentKey } from '@/lib/themes';
@@ -61,6 +64,7 @@ export default function ExplorerClient({
   }, [metric, load]);
 
   const colorKey = COLOR_KEYS[metric] ?? 'hrv';
+  const dateIdx = dates.indexOf(date);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -79,21 +83,39 @@ export default function ExplorerClient({
             </MenuItem>
           ))}
         </TextField>
-        <TextField
-          select
-          label="Day"
-          value={date}
-          onChange={(e) => load(metric, e.target.value)}
-          sx={{ minWidth: 180 }}
-          size="small"
-          disabled={!dates.length}
-        >
-          {dates.map((d) => (
-            <MenuItem key={d} value={d}>
-              {d}
-            </MenuItem>
-          ))}
-        </TextField>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <IconButton
+            size="small"
+            aria-label="Older day"
+            disabled={dateIdx < 0 || dateIdx >= dates.length - 1}
+            onClick={() => load(metric, dates[dateIdx + 1])}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+          <TextField
+            select
+            label="Day"
+            value={date}
+            onChange={(e) => load(metric, e.target.value)}
+            sx={{ minWidth: 180 }}
+            size="small"
+            disabled={!dates.length}
+          >
+            {dates.map((d) => (
+              <MenuItem key={d} value={d}>
+                {d}
+              </MenuItem>
+            ))}
+          </TextField>
+          <IconButton
+            size="small"
+            aria-label="Newer day"
+            disabled={dateIdx <= 0}
+            onClick={() => load(metric, dates[dateIdx - 1])}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+        </Box>
       </Box>
 
       <Card>

@@ -1,35 +1,13 @@
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Chip,
-} from '@mui/material';
 import { listBloodPanels, noteIndex, type BloodPanelRow } from '@/lib/queries';
-import NoteDot from '@/components/NoteDot';
-import LinkedNotes from '@/components/LinkedNotes';
-import { fmtDateLong, fmtNum } from '@/lib/format';
+import LabsView, { type LabPanel } from '@/components/LabsView';
 
 export const dynamic = 'force-dynamic';
-
-function flagColor(flag: string | null): 'error' | 'warning' | 'default' {
-  if (!flag) return 'default';
-  const f = flag.toUpperCase();
-  if (f.includes('HIGH')) return 'error';
-  if (f.includes('LOW')) return 'warning';
-  return 'default';
-}
 
 export default function LabsPage() {
   const rows = listBloodPanels();
   const notes = noteIndex();
 
-  // Group by date (descending), preserving the query's test ordering within.
+  // Group by date (rows already ordered date DESC, test ASC).
   const byDate = new Map<string, BloodPanelRow[]>();
   for (const r of rows) {
     const list = byDate.get(r.date) ?? [];
@@ -37,73 +15,12 @@ export default function LabsPage() {
     byDate.set(r.date, list);
   }
 
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Typography variant="h4">Labs</Typography>
-      {byDate.size === 0 && (
-        <Typography color="text.secondary">No blood panels recorded.</Typography>
-      )}
-      {[...byDate.entries()].map(([date, panel]) => {
-        const flagged = panel.filter((p) => p.flags).length;
-        const panelNotes = notes.notesFor('blood_panel', date);
-        return (
-          <Card key={date}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                <Typography variant="h6">{fmtDateLong(date)}</Typography>
-                <Chip
-                  size="small"
-                  label={`${panel.length} tests`}
-                  variant="outlined"
-                />
-                {flagged > 0 && (
-                  <Chip size="small" color="warning" label={`${flagged} flagged`} />
-                )}
-                <NoteDot summary={notes.summaryFor('blood_panel', date)} />
-              </Box>
-              {panelNotes.length > 0 && (
-                <Box sx={{ mb: 1.5 }}>
-                  <LinkedNotes notes={panelNotes} />
-                </Box>
-              )}
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Test</TableCell>
-                    <TableCell align="right">Value</TableCell>
-                    <TableCell>Unit</TableCell>
-                    <TableCell align="right">Reference</TableCell>
-                    <TableCell>Flag</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {panel.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell>{p.test_name}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: p.flags ? 700 : 400 }}>
-                        {fmtNum(p.value, p.value != null && p.value % 1 !== 0 ? 2 : 0)}
-                      </TableCell>
-                      <TableCell>{p.unit ?? ''}</TableCell>
-                      <TableCell align="right">
-                        {p.ref_low != null || p.ref_high != null
-                          ? `${p.ref_low ?? ''}–${p.ref_high ?? ''}`
-                          : '—'}
-                      </TableCell>
-                      <TableCell>
-                        {p.flags ? (
-                          <Chip size="small" color={flagColor(p.flags)} label={p.flags} />
-                        ) : (
-                          ''
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </Box>
-  );
+  const panels: LabPanel[] = [...byDate.entries()].map(([date, panelRows]) => ({
+    date,
+    rows: panelRows,
+    notes: notes.notesFor('blood_panel', date),
+    summary: notes.summaryFor('blood_panel', date),
+  }));
+
+  return <LabsView panels={panels} />;
 }

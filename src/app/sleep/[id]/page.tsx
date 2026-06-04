@@ -15,8 +15,10 @@ import {
   getSleepMovement,
   getSleepEventCounts,
   noteIndex,
+  listSleep,
 } from '@/lib/queries';
 import LinkedNotes from '@/components/LinkedNotes';
+import DayNav from '@/components/DayNav';
 import StatTile from '@/components/StatTile';
 import SleepStages from '@/components/SleepStages';
 import TimeSeriesChart from '@/components/TimeSeriesChart';
@@ -42,6 +44,12 @@ export default async function SleepDetail({
   const notes = noteIndex().notesFor('sleep', s.calendar_date);
   const off = s.timezone_offset_hours;
 
+  // Neighbors for the stepper (list is DESC by start_ts: +1 older, -1 newer).
+  const nights = listSleep();
+  const nIdx = nights.findIndex((n) => n.sleep_id === s.sleep_id);
+  const olderNight = nIdx >= 0 ? nights[nIdx + 1] : undefined;
+  const newerNight = nIdx > 0 ? nights[nIdx - 1] : undefined;
+
   const hrvStatus = s.hrv_status as string | null;
   const feedback = s.sleep_score_feedback as string | null;
   const lowestSpo2 = s.lowest_spo2 as number | null;
@@ -58,14 +66,21 @@ export default async function SleepDetail({
         Sleep
       </Button>
 
-      <Box>
-        <Typography variant="h4">
-          {s.calendar_date ? fmtDateLong(s.calendar_date) : 'Sleep'}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {fmtTime(toLocal(s.start_ts, off))} – {fmtTime(toLocal(s.end_ts, off))}
-          {feedback ? ` · ${feedback.replace(/_/g, ' ').toLowerCase()}` : ''}
-        </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant="h4">
+            {s.calendar_date ? fmtDateLong(s.calendar_date) : 'Sleep'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {fmtTime(toLocal(s.start_ts, off))} – {fmtTime(toLocal(s.end_ts, off))}
+            {feedback ? ` · ${feedback.replace(/_/g, ' ').toLowerCase()}` : ''}
+          </Typography>
+        </Box>
+        <DayNav
+          label="Night"
+          prevHref={olderNight ? `/sleep/${olderNight.sleep_id}` : undefined}
+          nextHref={newerNight ? `/sleep/${newerNight.sleep_id}` : undefined}
+        />
       </Box>
 
       {notes.length > 0 && <LinkedNotes notes={notes} />}

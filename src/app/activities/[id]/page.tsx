@@ -20,8 +20,10 @@ import {
   getActivitySeries,
   getActivityLaps,
   noteIndex,
+  listActivities,
 } from '@/lib/queries';
 import LinkedNotes from '@/components/LinkedNotes';
+import DayNav from '@/components/DayNav';
 import StatTile from '@/components/StatTile';
 import ZoneBar from '@/components/ZoneBar';
 import ActivityMap from '@/components/ActivityMap';
@@ -64,6 +66,12 @@ export default async function ActivityDetail({
     .toISOString()
     .slice(0, 10);
   const notes = noteIndex().notesFor('activity', activityDate);
+
+  // Neighbors for the stepper (list is DESC by start_ts: +1 older, -1 newer).
+  const all = listActivities();
+  const aIdx = all.findIndex((x) => x.activity_id === activity.activity_id);
+  const olderAct = aIdx >= 0 ? all[aIdx + 1] : undefined;
+  const newerAct = aIdx > 0 ? all[aIdx - 1] : undefined;
   // Show laps only when there's more than one and they carry useful signal.
   const showLaps =
     laps.length > 1 &&
@@ -84,14 +92,21 @@ export default async function ActivityDetail({
         Activities
       </Button>
 
-      <Box>
-        <Typography variant="h4">
-          {activity.activity_name || humanize(activity.activity_type_key)}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {fmtDateLong(local.toISOString().slice(0, 10))} · {fmtTime(local)}
-          {activity.location_name ? ` · ${activity.location_name}` : ''}
-        </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant="h4">
+            {activity.activity_name || humanize(activity.activity_type_key)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {fmtDateLong(local.toISOString().slice(0, 10))} · {fmtTime(local)}
+            {activity.location_name ? ` · ${activity.location_name}` : ''}
+          </Typography>
+        </Box>
+        <DayNav
+          label="Activity"
+          prevHref={olderAct ? `/activities/${olderAct.activity_id}` : undefined}
+          nextHref={newerAct ? `/activities/${newerAct.activity_id}` : undefined}
+        />
       </Box>
 
       {notes.length > 0 && <LinkedNotes notes={notes} />}
